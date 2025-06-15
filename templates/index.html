@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Social Video Agent - Control Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #d1d5db; overflow: hidden; }
+        .sidebar { background-color: #1f2937; }
+        .card { background-color: #1f2937; border: 1px solid #374151; }
+        .btn-primary { background-color: #4f46e5; color: white; transition: background-color: 0.3s; }
+        .btn-primary:hover:not(:disabled) { background-color: #4338ca; }
+        .btn-primary:disabled { background-color: #3730a3; cursor: not-allowed; }
+        .btn-secondary { background-color: #374151; color: white; transition: background-color: 0.3s; }
+        .form-input, .form-select, .form-textarea { background-color: #374151; border: 1px solid #4b5563; color: #d1d5db; }
+        .nav-link.active { background-color: #374151; color: white; }
+        .modal-backdrop { background-color: rgba(0,0,0,0.8); }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4b5563; transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4f46e5; }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .tab-button.active { background-color: #4f46e5; color: white; }
+        .video-preview { border: 2px solid transparent; transition: border-color 0.2s; cursor: pointer; }
+        .video-preview.selected { border-color: #4f46e5; }
+        /* Custom styles for range slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%;}
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #4f46e5; cursor: pointer; margin-top: -6px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #4f46e5; border-radius: 5px; } /* Blue track */
+        input[type=range]::-moz-range-track { width: 100%; height: 4px; cursor: pointer; background: #4f46e5; border-radius: 5px; } /* Blue track for Firefox */
+        /* Hide scrollbar for video previews but allow scrolling */
+        #video-previews::-webkit-scrollbar { display: none; }
+        #video-previews { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex h-screen">
+    <aside class="w-64 sidebar text-gray-300 p-6 flex flex-col justify-between">
+        <div>
+            <div class="flex items-center space-x-3 mb-10"><i data-lucide="bot" class="text-indigo-400"></i><h1 class="text-xl font-bold text-white">Video Agent</h1></div>
+            <nav id="sidebar-nav" class="space-y-2">
+                 <a href="#dashboard" class="nav-link flex items-center space-x-3 p-2 rounded-lg active"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+                 <a href="#history" class="nav-link flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700"><i data-lucide="history"></i><span>History</span></a>
+                 <a href="#settings" class="nav-link flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700"><i data-lucide="settings"></i><span>Settings</span></a>
+            </nav>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+        <div id="dashboard-page" class="page-content">
+            <div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-bold text-white">Campaign</h2><button id="generate-now-btn" class="btn-primary font-bold py-2 px-4 rounded-lg inline-flex items-center"><i data-lucide="play" class="mr-2 h-4 w-4"></i><span id="generate-btn-text">Generate Video</span></button></div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="card p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-white flex items-center"><i data-lucide="file-text" class="mr-2 text-indigo-400"></i>Script</h3>
+                        <div>
+                            <label for="script-source" class="block text-sm font-medium mb-1">Script Source</label>
+                            <select id="script-source" class="w-full form-select rounded-lg p-2">
+                                <option value="ai">AI-Generated</option>
+                                <option value="manual">Manual</option>
+                            </select>
+                        </div>
+                        <div id="ai-script-options" class="space-y-4 mt-4">
+                            <div><label for="topic" class="block text-sm font-medium mb-1">Video Topic</label><textarea id="topic" name="topic" rows="2" class="w-full form-textarea rounded-lg p-2" placeholder="e.g., The future of AI...">The history of personal computing</textarea></div>
+                             <div id="target-duration-container">
+                                <label for="duration" class="block text-sm font-medium mb-1">Target Duration (seconds)</label>
+                                <input type="number" id="duration" class="w-full form-input rounded-lg p-2" value="30">
+                            </div>
+                        </div>
+                         <div id="manual-script-options" class="hidden space-y-4 mt-4">
+                            <div><label for="manual-title" class="block text-sm font-medium mb-1">Title</label><input type="text" id="manual-title" class="w-full form-input rounded-lg p-2"></div>
+                            <div><label for="manual-script" class="block text-sm font-medium mb-1">Script</label><textarea id="manual-script" rows="4" class="w-full form-textarea rounded-lg p-2"></textarea></div>
+                        </div>
+                    </div>
+                    <div class="card p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-white flex items-center"><i data-lucide="music-4" class="mr-2 text-indigo-400"></i>Audio</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <label for="enable-voiceover" class="block text-sm font-medium">Enable Voiceover</label>
+                                <label class="switch"><input type="checkbox" id="enable-voiceover" checked><span class="slider"></span></label>
+                            </div>
+                            <div id="voiceover-options" class="mt-2 space-y-2">
+                                <div>
+                                    <label for="audio-source" class="block text-sm font-medium mb-1">Voiceover Type</label>
+                                    <select id="audio-source" class="w-full form-select rounded-lg p-2">
+                                        <option value="gtts">gTTS (Standard Quality)</option>
+                                        <option value="elevenlabs">ElevenLabs (High Quality)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="voice-volume" class="block text-sm font-medium mb-1">Voiceover Volume: <span id="voice-volume-label">100%</span></label>
+                                    <input type="range" id="voice-volume" min="0" max="2.0" value="1.0" step="0.1" class="w-full">
+                                </div>
+                            </div>
+                            <hr class="border-gray-600 my-4">
+                            <div class="flex justify-between items-center">
+                                <label for="enable-music" class="block text-sm font-medium">Enable Music</label>
+                                <label class="switch"><input type="checkbox" id="enable-music"><span class="slider"></span></label>
+                            </div>
+                             <div id="music-options" class="hidden mt-2 space-y-2">
+                                 <div>
+                                     <label for="music-select" class="block text-sm font-medium mb-1">Background Music</label>
+                                     <select id="music-select" class="w-full form-select rounded-lg p-2"></select>
+                                 </div>
+                                 <div>
+                                     <label for="music-volume" class="block text-sm font-medium mb-1">Music Volume: <span id="music-volume-label">20%</span></label>
+                                     <input type="range" id="music-volume" min="0" max="1.0" value="0.2" step="0.05" class="w-full">
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-white flex items-center"><i data-lucide="captions" class="mr-2 text-indigo-400"></i>Text Overlay</h3>
+                        <div class="flex justify-between items-center">
+                            <label for="show-title" class="block text-sm font-medium">Show Title in Video</label>
+                            <label class="switch"><input type="checkbox" id="show-title" checked><span class="slider"></span></label>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <label for="enable-subtitles" class="block text-sm font-medium">Enable Subtitles</label>
+                            <label class="switch"><input type="checkbox" id="enable-subtitles" checked><span class="slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="card p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-white flex items-center"><i data-lucide="video" class="mr-2 text-indigo-400"></i>Background Video</h3>
+                        <div class="mb-4 border-b border-gray-700">
+                            <nav id="video-tabs" class="-mb-px flex space-x-4" aria-label="Tabs"></nav>
+                        </div>
+                        <div id="video-previews" class="flex items-center space-x-2 h-48 overflow-x-auto overflow-y-hidden p-2 bg-gray-900/50 rounded-lg"></div>
+                    </div>
+                    <div id="activity-log" class="card p-6 rounded-lg"><h3 class="text-xl font-semibold mb-4 text-white flex items-center"><i data-lucide="gantt-chart-square" class="mr-2 text-indigo-400"></i>Activity Log</h3><div id="activity-log-list" class="space-y-4"></div></div>
+                </div>
+            </div>
+        </div>
+        <div id="history-page" class="page-content hidden">
+            <h2 class="text-3xl font-bold text-white mb-8">Generated Video History</h2>
+            <div id="history-list" class="space-y-4"></div>
+        </div>
+        <div id="settings-page" class="page-content hidden">
+            <h2 class="text-3xl font-bold text-white mb-8">Settings</h2>
+            <div class="max-w-2xl space-y-6">
+                 <div class="card p-6 rounded-lg">
+                     <h3 class="text-xl font-semibold mb-4 text-white">API Keys & Services</h3>
+                     <div class="space-y-4">
+                        <div><label for="whisper-api-url" class="block text-sm font-medium mb-1">Whisper API Endpoint</label><input type="text" id="whisper-api-url" class="w-full form-input rounded-lg p-2" placeholder="e.g., http://localhost:9000"></div>
+                        <div><label for="elevenlabs-api-key" class="block text-sm font-medium mb-1">ElevenLabs API Key</label><input type="password" id="elevenlabs-api-key" class="w-full form-input rounded-lg p-2" placeholder="Enter your ElevenLabs API key"></div>
+                     </div>
+                </div>
+                <div class="card p-6 rounded-lg">
+                     <h3 class="text-xl font-semibold mb-4 text-white">Ollama Configuration</h3>
+                     <div class="space-y-4"><div><label for="ollama-url" class="block text-sm font-medium mb-1">Ollama Server URL</label><input type="text" id="ollama-url" class="w-full form-input rounded-lg p-2" placeholder="http://localhost:11434"></div><div><label for="ollama-model" class="block text-sm font-medium mb-1">Default Model</label><select id="ollama-model" class="w-full form-select rounded-lg p-2"><option>llama3.2:latest</option><option>llama3</option><option selected>mistral</option></select></div></div>
+                </div>
+                <div class="mt-2 flex justify-end"><button id="save-settings-btn" class="btn-primary font-bold py-2 px-6 rounded-lg">Save Settings</button></div>
+            </div>
+        </div>
+    </main>
+    
+    <div id="video-player-modal" class="fixed inset-0 modal-backdrop flex items-center justify-center p-4 hidden z-50">
+        <div class="w-full max-w-sm bg-black rounded-lg shadow-2xl overflow-hidden relative">
+            <video id="video-player" class="w-full h-auto" controls></video>
+            <button id="close-modal-btn" class="absolute top-2 right-2 text-white bg-black/50 rounded-full p-1 z-20"><i data-lucide="x"></i></button>
+        </div>
+    </div>
+    
+<script>
+    lucide.createIcons();
+
+    // --- State ---
+    let selectedVideoPath = '';
+    let availableVideos = {};
+
+    // --- DOM Elements ---
+    const sidebarNav = document.getElementById('sidebar-nav');
+    const pages = document.querySelectorAll('.page-content');
+    const generateBtn = document.getElementById('generate-now-btn');
+    const generateBtnText = document.getElementById('generate-btn-text');
+    const topicInput = document.getElementById('topic');
+    const scriptSourceSelect = document.getElementById('script-source');
+    const aiScriptOptions = document.getElementById('ai-script-options');
+    const manualScriptOptions = document.getElementById('manual-script-options');
+    const manualTitleInput = document.getElementById('manual-title');
+    const manualScriptInput = document.getElementById('manual-script');
+    const durationInput = document.getElementById('duration');
+    const durationContainer = document.getElementById('target-duration-container');
+    const showTitleToggle = document.getElementById('show-title');
+    const enableSubtitlesToggle = document.getElementById('enable-subtitles');
+    const enableVoiceoverToggle = document.getElementById('enable-voiceover');
+    const audioSourceSelect = document.getElementById('audio-source');
+    const enableMusicToggle = document.getElementById('enable-music');
+    const musicSelect = document.getElementById('music-select');
+    const voiceVolumeSlider = document.getElementById('voice-volume');
+    const musicVolumeSlider = document.getElementById('music-volume');
+    const voiceVolumeLabel = document.getElementById('voice-volume-label');
+    const musicVolumeLabel = document.getElementById('music-volume-label');
+    const voiceoverOptions = document.getElementById('voiceover-options');
+    const musicOptions = document.getElementById('music-options');
+    const activityLogList = document.getElementById('activity-log-list');
+    const historyListContainer = document.getElementById('history-list');
+    const settingsInputs = {
+        ollamaUrl: document.getElementById('ollama-url'),
+        ollamaModel: document.getElementById('ollama-model'),
+        whisperApiUrl: document.getElementById('whisper-api-url'),
+        elevenlabsApiKey: document.getElementById('elevenlabs-api-key')
+    };
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    const playerModal = document.getElementById('video-player-modal');
+    const videoPlayer = document.getElementById('video-player');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const videoTabsContainer = document.getElementById('video-tabs');
+    const videoPreviewsContainer = document.getElementById('video-previews');
+    
+    // --- Page Navigation & UI Toggles ---
+    const showPage = (pageId) => {
+        pages.forEach(page => page.classList.toggle('hidden', !page.id.startsWith(pageId)));
+        sidebarNav.querySelectorAll('.nav-link').forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${pageId}`));
+        if (pageId === 'history') loadHistory();
+    };
+    sidebarNav.addEventListener('click', (e) => {
+        const link = e.target.closest('.nav-link');
+        if (link) { e.preventDefault(); showPage(link.getAttribute('href').substring(1)); }
+    });
+    
+    scriptSourceSelect.onchange = () => {
+        const isAI = scriptSourceSelect.value === 'ai';
+        aiScriptOptions.style.display = isAI ? 'block' : 'none';
+        manualScriptOptions.style.display = isAI ? 'none' : 'block';
+        durationContainer.style.display = isAI ? 'block' : 'none';
+    };
+    enableVoiceoverToggle.onchange = () => { voiceoverOptions.style.display = enableVoiceoverToggle.checked ? 'block' : 'none'; };
+    enableMusicToggle.onchange = () => { musicOptions.style.display = enableMusicToggle.checked ? 'block' : 'none'; };
+    voiceVolumeSlider.oninput = () => { voiceVolumeLabel.textContent = `${Math.round(voiceVolumeSlider.value * 100)}%`; };
+    musicVolumeSlider.oninput = () => { musicVolumeLabel.textContent = `${Math.round(musicVolumeSlider.value * 100)}%`; };
+
+    // --- Settings Management ---
+    function saveSettings() {
+        const settings = {};
+        for (const key in settingsInputs) { settings[key] = settingsInputs[key].value; }
+        localStorage.setItem('videoAgentSettings', JSON.stringify(settings));
+        alert('Settings saved!');
+    }
+    function loadSettings() {
+        const savedSettings = JSON.parse(localStorage.getItem('videoAgentSettings') || '{}');
+        for (const key in settingsInputs) {
+            if (settingsInputs[key]) settingsInputs[key].value = savedSettings[key] || '';
+        }
+    }
+    saveSettingsBtn.addEventListener('click', saveSettings);
+    
+    // --- Video & Music Selection Logic ---
+    async function loadAvailableContent() {
+        try {
+            const [videoRes, musicRes] = await Promise.all([ fetch('/list-videos'), fetch('/list-music') ]);
+            availableVideos = await videoRes.json();
+            const availableMusic = await musicRes.json();
+            
+            renderVideoTabs();
+            if(Object.keys(availableVideos).length > 0) {
+                 const defaultCategory = 'minecraft';
+                 if(availableVideos[defaultCategory]) {
+                    showVideoCategory(defaultCategory);
+                 } else {
+                    showVideoCategory(Object.keys(availableVideos)[0]);
+                 }
+            }
+            musicSelect.innerHTML = availableMusic.map(m => `<option value="${m}">${m}</option>`).join('');
+        } catch (e) {
+            console.error("Could not load available content.", e);
+        }
+    }
+
+    function renderVideoTabs() {
+        videoTabsContainer.innerHTML = '';
+        const categoryOrder = ['minecraft', 'fortnite', 'custom'];
+        const sortedCategories = [...new Set([...categoryOrder, ...Object.keys(availableVideos)])];
+
+        sortedCategories.forEach(category => {
+             if (availableVideos[category]) {
+                const tab = document.createElement('button');
+                tab.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                tab.className = 'tab-button capitalize px-3 py-1 text-sm font-medium rounded-md';
+                tab.onclick = () => showVideoCategory(category);
+                videoTabsContainer.appendChild(tab);
+            }
+        });
+    }
+
+    function showVideoCategory(category) {
+        videoTabsContainer.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.toLowerCase() === category);
+        });
+
+        videoPreviewsContainer.innerHTML = '';
+        const videos = availableVideos[category] || [];
+        videos.forEach((videoPath, index) => {
+            const videoEl = document.createElement('video');
+            videoEl.src = videoPath;
+            videoEl.className = 'video-preview rounded-md h-full w-auto object-cover flex-shrink-0';
+            videoEl.muted = true; videoEl.loop = true;
+            videoEl.onmouseenter = () => videoEl.play();
+            videoEl.onmouseleave = () => videoEl.pause();
+            videoEl.onclick = () => selectVideo(videoEl, videoPath);
+            videoPreviewsContainer.appendChild(videoEl);
+            if(index === 0 && (!selectedVideoPath || !selectedVideoPath.startsWith(`/static/backgrounds/${category}`))) {
+                 selectVideo(videoEl, videoPath);
+            }
+        });
+    }
+
+    function selectVideo(element, path) {
+        document.querySelectorAll('.video-preview').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        selectedVideoPath = path;
+    }
+
+    // --- Video Generation ---
+    async function generateVideo() {
+        if (!selectedVideoPath) { alert('Please select a background video first.'); return; }
+        
+        const settings = JSON.parse(localStorage.getItem('videoAgentSettings') || '{}');
+        if(audioSourceSelect.value === 'elevenlabs' && !settings.elevenlabsApiKey) {
+            alert('Please enter your ElevenLabs API key in the Settings page first.');
+            return;
+        }
+
+        generateBtn.disabled = true;
+        generateBtnText.textContent = 'Generating...';
+        const logItem = addActivityLogItem('Queued...', 'In Progress');
+        
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: topicInput.value,
+                    duration: durationInput.value,
+                    selectedVideo: selectedVideoPath,
+                    scriptSource: scriptSourceSelect.value,
+                    manualTitle: manualTitleInput.value,
+                    manualScript: manualScriptInput.value,
+                    enableVoiceover: enableVoiceoverToggle.checked,
+                    audioSource: audioSourceSelect.value,
+                    enableMusic: enableMusicToggle.checked,
+                    selectedMusic: musicSelect.value,
+                    voiceVolume: voiceVolumeSlider.value,
+                    musicVolume: musicVolumeSlider.value,
+                    showTitle: showTitleToggle.checked,
+                    enableSubtitles: enableSubtitlesToggle.checked,
+                    ollamaUrl: settings.ollamaUrl,
+                    ollamaModel: settings.ollamaModel,
+                    whisperApiUrl: settings.whisperApiUrl,
+                    elevenlabsApiKey: settings.elevenlabsApiKey
+                })
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                try {
+                    const errorData = JSON.parse(errorText);
+                     throw new Error(errorData.error || 'Failed to start task.');
+                } catch (e) {
+                     throw new Error(errorText || 'An unknown error occurred on the server.');
+                }
+            }
+            const data = await response.json();
+            pollTaskStatus(data.task_id, logItem);
+        } catch(e) {
+            updateActivityLog(logItem, `Error: ${e.message}`, 'Failed');
+            generateBtn.disabled = false; generateBtnText.textContent = 'Generate Video';
+        }
+    }
+    generateBtn.addEventListener('click', generateVideo);
+    
+    function pollTaskStatus(taskId, logItem) {
+        const interval = setInterval(async () => {
+            try {
+                const response = await fetch(`/status/${taskId}`);
+                const data = await response.json();
+                
+                updateActivityLog(logItem, data.status, 'In Progress', `Task: ${taskId.substring(0,8)}...`);
+
+                if (data.status === 'complete') {
+                    clearInterval(interval);
+                    updateActivityLog(logItem, 'Video generation complete!', 'Success', data.video_url);
+                    generateBtn.disabled = false; generateBtnText.textContent = 'Generate Video';
+                } else if (data.status === 'error') {
+                    clearInterval(interval);
+                    updateActivityLog(logItem, `Error: ${data.error}`, 'Failed');
+                    generateBtn.disabled = false; generateBtnText.textContent = 'Generate Video';
+                }
+            } catch (e) {
+                clearInterval(interval);
+                updateActivityLog(logItem, 'Failed to get task status.', 'Failed');
+                generateBtn.disabled = false; generateBtnText.textContent = 'Generate Video';
+            }
+        }, 3000);
+    }
+
+    // --- History & Player Logic ---
+    async function loadHistory() {
+        historyListContainer.innerHTML = '<p>Loading history...</p>';
+        try {
+            const response = await fetch('/history');
+            const history = await response.json();
+            if (history.length === 0) { historyListContainer.innerHTML = '<p>No videos in history yet.</p>'; return; }
+            historyListContainer.innerHTML = '';
+            history.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'card p-4 flex justify-between items-center';
+                itemEl.innerHTML = `
+                    <div><p class="font-semibold text-white">${item.title}</p><p class="text-sm text-gray-400">${item.date}</p></div>
+                    <div><button class="btn-secondary py-1 px-3 rounded-lg text-sm mr-2" onclick="playVideo('/static/videos/${item.file}')">Replay</button><a href="/static/videos/${item.file}" download class="btn-primary py-1 px-3 rounded-lg text-sm">Download</a></div>`;
+                historyListContainer.appendChild(itemEl);
+            });
+        } catch (error) {
+            historyListContainer.innerHTML = '<p class="text-red-400">Could not load history.</p>';
+        }
+    }
+    
+    function playVideo(videoUrl) {
+        playerModal.classList.remove('hidden');
+        videoPlayer.src = videoUrl;
+        videoPlayer.play();
+    }
+    closeModalBtn.addEventListener('click', () => {
+        playerModal.classList.add('hidden');
+        videoPlayer.pause();
+        videoPlayer.src = '';
+    });
+
+    // --- UI Update Functions ---
+    function addActivityLogItem(text, status, title = "New Video Task") {
+        const item = document.createElement('div');
+        activityLogList.insertAdjacentElement('afterbegin', item);
+        updateActivityLog(item, text, status, title);
+        return item;
+    }
+    function updateActivityLog(item, text, status, title = "New Video Task") {
+        const S_CLASS = {'In Progress':'bg-blue-500/20 text-blue-400','Success':'bg-green-500/20 text-green-400','Failed':'bg-red-500/20 text-red-400'};
+        const I_HTML = {'In Progress':'<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>','Success':'<i data-lucide="check-circle-2" class="text-green-400"></i>','Failed':'<i data-lucide="alert-triangle" class="text-red-400"></i>'};
+        item.className = 'flex items-center space-x-4 p-3 rounded-lg bg-gray-900/50';
+        
+        let content = `<div class="w-16 h-24 rounded-md bg-gray-700 flex items-center justify-center">${I_HTML[status]}</div>
+                       <div class="flex-1">
+                           <p class="font-semibold text-white">${title}</p>
+                           <p class="text-sm text-gray-400">${text}</p>
+                           <p class="text-xs text-gray-500">Just now</p>`;
+                           
+        if(status === 'Success') {
+            content += `<a href="#" class="text-indigo-400 text-sm hover:underline" onclick="playVideo('${title}'); return false;">View Video</a>`;
+        }
+        
+        content += `</div><span class="text-xs font-medium ${S_CLASS[status]} py-1 px-3 rounded-full">${status}</span>`;
+        
+        item.innerHTML = content;
+        lucide.createIcons();
+    }
+    
+    // --- Initial Load ---
+    document.addEventListener('DOMContentLoaded', () => {
+        loadSettings();
+        loadAvailableContent();
+        showPage('dashboard');
+        // Initial state of UI elements
+        scriptSourceSelect.onchange();
+        enableVoiceoverToggle.onchange();
+        enableMusicToggle.onchange();
+    });
+</script>
+</body>
+</html>
