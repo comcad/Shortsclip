@@ -24,15 +24,45 @@ This is a Flask-based web application that automates the creation of short socia
 - An Ollama instance (for AI features)
 - A Whisper API endpoint (for subtitle features)
 
+## Running Locally with Python (Manual Setup)
+
+Follow these steps to run the application locally without Docker.
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone https://github.com/comcad/Shortsclip.git
+    cd Shortsclip
+    ```
+
+2.  **Install Python Dependencies:**
+    Open your terminal or command prompt and run:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3.  **Create Media Folders and Add Content:**
+    * Place music in the `music` folder and add any `.mp3`.
+    * place background videos in `static/backgrounds` folder and add any `.mp4`.
+
+4.  **Run the Application:**
+    Start the Flask server:
+    ```bash
+    python app.py
+    ```
+
+5.  **Access the Web UI:**
+    Open your web browser and navigate to `http://localhost:5000`.
+    
+
 ## Running with Docker (Recommended)
 
 1.  **Clone the repo and cd into its folder:**
     ```bash
-    git clone https://github.com/comcad/Shortsclip.git
-     ```
+    git clone [https://github.com/comcad/Shortsclip.git](https://github.com/comcad/Shortsclip.git)
+    ```
     ```bash
-    cd Shortsclip 
-     ```
+    cd Shortsclip
+    ```
     
 2.  **Build the Docker image:**
     ```bash
@@ -52,3 +82,4 @@ This is a Flask-based web application that automates the creation of short socia
     ```
 
 4.  Access the web UI at `http://localhost:5000`.
+
