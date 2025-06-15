@@ -1,4 +1,4 @@
-# Automated Social Video Agent
+# Shortclip: An Automated Social Video Agent
 
 This is a Flask-based web application that automates the creation of short social media videos. It uses AI to generate scripts, adds voiceovers, subtitles, and background music, and renders the final video using FFmpeg.
 
