@@ -2,6 +2,11 @@
 
 This is a Flask-based web application that automates the creation of short social media videos. It uses AI to generate scripts, adds voiceovers, subtitles, and background music, and renders the final video using FFmpeg.
 
+![application](https://github.com/user-attachments/assets/5313e315-d2fa-4525-99d2-46f31904a506)
+
+![2025-06-15 10_47_40-Automated Social Video Agent - Control Panel — Mozilla Firefox](https://github.com/user-attachments/assets/50655f61-1211-47fe-b834-276daf138b53)
+
+
 ## Features
 
 - **AI Script Generation**: Connects to an Ollama instance to generate video scripts from a topic.
