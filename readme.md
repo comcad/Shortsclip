@@ -21,12 +21,20 @@ This is a Flask-based web application that automates the creation of short socia
 
 ## Running with Docker (Recommended)
 
-1.  **Build the Docker image:**
+1.  **Clone the repo and cd into its folder:**
+    ```bash
+    git clone https://github.com/comcad/Shortsclip.git
+     ```
+    ```bash
+    cd Shortsclip 
+     ```
+    
+2.  **Build the Docker image:**
     ```bash
     docker build -t video-agent .
     ```
 
-2.  **Run the Docker container:**
+3.  **Run the Docker container:**
     ```bash
     docker run -d \
       -p 5000:5000 \
@@ -38,4 +46,4 @@ This is a Flask-based web application that automates the creation of short socia
       video-agent
     ```
 
-3.  Access the web UI at `http://localhost:5000`.
+4.  Access the web UI at `http://localhost:5000`.
