@@ -47,7 +47,7 @@ Follow these steps to run the application locally without Docker.
 4.  **Run the Application:**
     Start the Flask server:
     ```bash
-    python app.py
+    py app.py
     ```
 
 5.  **Access the Web UI:**
