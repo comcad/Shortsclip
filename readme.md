@@ -24,7 +24,7 @@ This is a Flask-based web application that automates the creation of short socia
 - An Ollama instance (for AI features)
 - A Whisper API endpoint (for subtitle features)
 
-## Running Locally with Python (Manual Setup)
+## Running Locally with Python (Recomended Setup)
 
 Follow these steps to run the application locally without Docker.
 
@@ -54,7 +54,7 @@ Follow these steps to run the application locally without Docker.
     Open your web browser and navigate to `http://localhost:5000`.
     
 
-## Running with Docker (Recommended)
+## Running with Docker (CPU Only!!! working on nvenc support)
 
 1.  **Clone the repo and cd into its folder:**
     ```bash
